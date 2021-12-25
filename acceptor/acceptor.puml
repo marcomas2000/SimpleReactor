@@ -1,0 +1,4 @@
+@startuml acceptor
+class Acceptor
+
+@enduml

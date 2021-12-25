@@ -1,0 +1,9 @@
+libreactor.a
+acceptor/Acceptor.o
+acceptor/AcceptorThread.o
+example/simple/main.o
+example/simple/test
+reactor/Reactor.o
+reactor/ReactorHandler.o
+reactor/Reactors.o
+.vscode/
