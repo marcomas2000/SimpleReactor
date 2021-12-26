@@ -7,3 +7,4 @@ reactor/Reactor.o
 reactor/ReactorHandler.o
 reactor/Reactors.o
 .vscode/
+build/
