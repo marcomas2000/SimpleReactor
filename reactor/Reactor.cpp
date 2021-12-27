@@ -1,5 +1,21 @@
+/////////////////////////////////////////////////////////////////////////
+// Copyright 2021 Marco Mascioli
+/////////////////////////////////////////////////////////////////////////
+/************************************************************************
+    This file is part of 
+    SIMPLE_REACTOR (https://github.com/marcomas2000/simple_reactor)
+
+    This work was originally based the project 
+    https://github.com/ty7swkr/open_reactor
+    though the structure and the content of the project has been
+    widely modified.
+
+    SIMPLE_REACTOR is free software: you can use it under the terms of 
+    the MIT license as described in the file LICENSE.
+************************************************************************/
 #include "Reactor.h"
 #include <assert.h>
+#include <reactor/trace.h>
 
 namespace reactor
 {
@@ -115,7 +131,7 @@ Reactor::dispatch_demuxer_event_result(const EventHandlerIoDemuxer::EventData &e
       handlers_.emplace(std::make_pair(event.io_handle, handler));
       handler->io_handle_ = event.io_handle;
 
-      handler->register_handle(this, event.io_handle);
+      handler->register_handler(this, event.io_handle);
       if (handler != reactor_handler_ && reactor_handler_ != nullptr)
         reactor_handler_->reactor_handle_registered_handler(this, handler);
 
@@ -150,6 +166,7 @@ Reactor::run()
 
   run_reactor_handler();
 
+  reactor_trace << "Reactor::run loop..." << std::endl;
   while (true)
   {
     int32_t msec = 0;

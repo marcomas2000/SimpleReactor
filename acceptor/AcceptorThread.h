@@ -1,19 +1,26 @@
-/*
- * AcceptorThread.h
- *
- *  Created on: 2020. 2. 11.
- *      Author: tys
- */
+//////////////////////////////////////////////////////////////////////////
+// Copyright 2021 Marco Mascioli
+/////////////////////////////////////////////////////////////////////////
+/************************************************************************
+    This file is part of 
+    SIMPLE_REACTOR (https://github.com/marcomas2000/simple_reactor)
 
-#ifndef OPEN_REACTOR_TCP_ACCEPTOR_ACCEPTTHREAD_H_
-#define OPEN_REACTOR_TCP_ACCEPTOR_ACCEPTTHREAD_H_
+    This work was originally based the project 
+    https://github.com/ty7swkr/open_reactor
+    though the structure and the content of the project has been
+    widely modified.
 
-//#include <acceptor/AcceptorThreadHandlerFactory.h>
+    SIMPLE_REACTOR is free software: you can use it under the terms of 
+    the MIT license as described in the file LICENSE.
+************************************************************************/
+#ifndef SIMPLE_REACTOR_ACCEPTOR_ACCEPTORTHREAD_H_
+#define SIMPLE_REACTOR_ACCEPTOR_ACCEPTORTHREAD_H_
+
 #include <acceptor/Acceptor.h>
 #include <acceptor/EventHandlerFactory.h>
 
 #include <reactor/ReactorHandlerFactory.h>
-#include <reactor/Reactors.h>
+#include <reactor/ReactorThread.h>
 #include <reactor/ObjectsTimer.h>
 
 #include <cstdio>
@@ -25,77 +32,63 @@
 namespace reactor
 {
 
-class AcceptorThread
-{
-public:
-  AcceptorThread(Acceptor &acceptor,
-                 Reactors &reactors,
-                 EventHandlerFactory &event_handler_factory);
+  class AcceptorThread
+  {
+  public:
+    AcceptorThread(Acceptor &acceptor,
+                   ReactorThread *reactor_thread,
+                   EventHandlerFactory &event_handler_factory);
 
-  ~AcceptorThread();
+    ~AcceptorThread();
 
-  void start();
-  void stop ();
+    void start();
+    void stop();
 
-  const Acceptor &get_acceptor() const { return acceptor_; }
+  protected:
+    void run();
 
-protected:
-  void     run();
-  Reactor *select_reactor(const std::vector<Reactor *> &reactors);
-  static size_t reactor_selector_;
+  private:
+    Acceptor &acceptor_;
+    ReactorThread *reactor_thread_;
+    EventHandlerFactory &handler_factory_;
 
-private:
-  Acceptor &acceptor_;
-  Reactors &reactors_;
-  EventHandlerFactory &handler_factory_;
+  private:
+    std::thread *thread_ = nullptr;
+  };
 
-private:
-  std::thread *thread_  = nullptr;
+  inline AcceptorThread::AcceptorThread(Acceptor &acceptor,
+                                        ReactorThread *reactor_thread,
+                                        EventHandlerFactory &event_handler_factory)
+      : acceptor_(acceptor),
+        reactor_thread_(reactor_thread),
+        handler_factory_(event_handler_factory)
+  {
+  }
 
-};
+  inline AcceptorThread::~AcceptorThread()
+  {
+    if (thread_ != nullptr)
+      delete thread_;
+  }
 
-inline
-AcceptorThread::AcceptorThread(Acceptor &acceptor,
-                               Reactors &reactors,
-                               EventHandlerFactory &event_handler_factory)
-: acceptor_       (acceptor),
-  reactors_       (reactors),
-  handler_factory_(event_handler_factory)
-{
-}
+  inline void
+  AcceptorThread::start()
+  {
+    if (thread_ != nullptr)
+      delete thread_;
 
-inline
-AcceptorThread::~AcceptorThread()
-{
-  if (thread_ != nullptr)
+    thread_ = new std::thread{&AcceptorThread::run, this};
+  }
+
+  inline void
+  AcceptorThread::stop()
+  {
+    acceptor_.close();
+    thread_->join();
     delete thread_;
-}
-
-inline void
-AcceptorThread::start()
-{
-  if (thread_ != nullptr)
-    delete thread_;
-
-  thread_ = new std::thread{&AcceptorThread::run, this};
+    thread_ = nullptr;
+  }
 
 }
 
-inline void
-AcceptorThread::stop()
-{
-  acceptor_.close();
-  thread_->join();
-  delete thread_;
-  thread_ = nullptr;
-}
-
-inline Reactor *
-AcceptorThread::select_reactor(const std::vector<Reactor *> &reactors)
-{
-  return reactors[reactor_selector_++ % reactors.size()];
-}
-
-}
-
-#endif /* OPEN_REACTOR_TCP_ACCEPTOR_ACCEPTTHREAD_H_ */
+#endif // SIMPLE_REACTOR_ACCEPTOR_ACCEPTORTHREAD_H_
