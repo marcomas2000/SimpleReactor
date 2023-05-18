@@ -1,1 +1,2 @@
-# simple_reactor
+# Simple Reactor
+As impleented in a log server 
