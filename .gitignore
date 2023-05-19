@@ -1,4 +1,6 @@
 libreactor.a
+artifact.zip
+artifact/
 acceptor/Acceptor.o
 acceptor/AcceptorThread.o
 example/simple/main.o
